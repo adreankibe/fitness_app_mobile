@@ -1,4 +1,7 @@
-import { resolveInitialRoute } from "@/lib/navigation/route-decisions";
+import {
+  resolveInitialRoute,
+  toInvitePreviewRoute,
+} from "@/lib/navigation/route-decisions";
 import type { CurrentUser } from "@/types/api";
 
 function user(nextAction: CurrentUser["nextAction"]): CurrentUser {
@@ -34,6 +37,14 @@ describe("resolveInitialRoute", () => {
   it("routes active users to dashboard", () => {
     expect(resolveInitialRoute(false, true, user("CONTINUE"))).toBe(
       "/(app)/dashboard",
+    );
+  });
+});
+
+describe("toInvitePreviewRoute", () => {
+  it("encodes invite tokens before placing them in an app route segment", () => {
+    expect(toInvitePreviewRoute("../org/settings?x=1")).toBe(
+      "/(auth)/invite/..%2Forg%2Fsettings%3Fx%3D1",
     );
   });
 });

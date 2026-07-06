@@ -3,20 +3,19 @@ import { router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Checkbox, Input } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { completeProfileSchema } from "@/lib/schemas/forms";
-import { authService } from "@/services/auth";
+import { useAuthSessionStore } from "@/store/modules/auth-session";
 
 type ProfileForm = z.infer<typeof completeProfileSchema>;
 
 export default function ProfileOnboardingScreen() {
-  const queryClient = useQueryClient();
+  const completeProfile = useAuthSessionStore((state) => state.completeProfile);
   const toast = useToast();
   const form = useForm<ProfileForm>({
     defaultValues: { acceptTerms: false, avatarUrl: "", fullName: "" },
@@ -25,13 +24,12 @@ export default function ProfileOnboardingScreen() {
 
   const mutation = useMutation({
     mutationFn: (values: ProfileForm) =>
-      authService.completeProfile({
+      completeProfile({
         acceptTerms: values.acceptTerms,
         avatarUrl: values.avatarUrl || null,
         fullName: values.fullName,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
       router.replace("/");
     },
     onError: (error) =>

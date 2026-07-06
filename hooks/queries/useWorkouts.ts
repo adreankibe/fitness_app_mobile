@@ -1,37 +1,46 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { queryKeys } from "@/hooks/queries/keys";
-import {
-  filterWorkouts,
-  findWorkout,
-  resolveWorkoutCollection,
-  type WorkoutFilters,
-} from "@/lib/training/catalog";
-import { workoutsService } from "@/services/workouts";
+import { type WorkoutFilters } from "@/lib/training/catalog";
 import { useOrganizationStore } from "@/store/modules/organization";
+import { useWorkoutsStore } from "@/store/modules/workouts";
 
 export function useWorkouts(filters: WorkoutFilters = {}, enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useWorkoutsStore();
+  const filterKey = JSON.stringify(filters);
 
-  return useQuery({
-    queryKey: queryKeys.workouts(organizationId, filters),
-    queryFn: workoutsService.list,
-    select: (data) => filterWorkouts(resolveWorkoutCollection(data), filters),
-    enabled: enabled && Boolean(organizationId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId) {
+      void store.fetchWorkouts();
+    }
+  }, [enabled, organizationId, filterKey]);
+
+  return {
+    data: store.selectWorkouts(filters),
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchWorkouts,
+  };
 }
 
 export function useWorkout(workoutId: string | undefined, enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useWorkoutsStore();
 
-  return useQuery({
-    queryKey: queryKeys.workout(organizationId, workoutId),
-    queryFn: workoutsService.list,
-    select: (data) => findWorkout(resolveWorkoutCollection(data), workoutId),
-    enabled: enabled && Boolean(organizationId && workoutId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId && workoutId) {
+      void store.fetchWorkouts();
+    }
+  }, [enabled, organizationId, workoutId]);
+
+  return {
+    data: store.selectWorkout(workoutId),
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchWorkouts,
+  };
 }

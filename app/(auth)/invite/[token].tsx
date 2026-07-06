@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 import { RoleBadge } from "@/components/domain/role-badge";
 import { RepScriptLoader } from "@/components/domain/repscript-loader";
@@ -9,20 +9,21 @@ import { StatusBadge } from "@/components/domain/status-badge";
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { useInvitationPreview } from "@/hooks/queries/useInvitations";
-import { invitationsService } from "@/services/invitations";
+import { useAuthSessionStore } from "@/store/modules/auth-session";
+import { useInvitationsStore } from "@/store/modules/invitations";
 
 export default function InviteScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const preview = useInvitationPreview(token);
-  const queryClient = useQueryClient();
+  const acceptInvitation = useInvitationsStore((state) => state.acceptInvitation);
+  const fetchAuthMe = useAuthSessionStore((state) => state.fetchAuthMe);
   const toast = useToast();
 
   const mutation = useMutation({
-    mutationFn: () => invitationsService.accept(token, false),
+    mutationFn: () => acceptInvitation(token, false),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
+      await fetchAuthMe();
       router.replace("/");
     },
     onError: (error) =>

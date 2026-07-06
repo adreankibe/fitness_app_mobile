@@ -76,6 +76,7 @@ export default function ProgramsScreen() {
           <Button
             label="Create"
             leftIcon={<Plus color="#ffffff" size={16} />}
+            onPress={() => router.push("/(app)/programs/create")}
             size="sm"
           />
         }
@@ -119,6 +120,12 @@ export default function ProgramsScreen() {
           icon={Dumbbell}
           title="No programs on the rack"
           description="Create a training block or clear the filters to see assigned programs."
+          action={
+            <Button
+              label="Create program"
+              onPress={() => router.push("/(app)/programs/create")}
+            />
+          }
         />
       )}
     </Screen>

@@ -1,21 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { authService } from "@/services/auth";
-import { useOrganizationStore } from "@/store/modules/organization";
-import { queryKeys } from "@/hooks/queries/keys";
+import { useAuthSessionStore } from "@/store/modules/auth-session";
 
 export function useAuthMe(enabled = true) {
-  const hydrateFromMemberships = useOrganizationStore(
-    (state) => state.hydrateFromMemberships,
-  );
+  const store = useAuthSessionStore();
 
-  return useQuery({
-    queryKey: queryKeys.authMe,
-    queryFn: async () => {
-      const user = await authService.me();
-      hydrateFromMemberships(user.memberships, user.activeOrganizationId);
-      return user;
-    },
-    enabled,
-  });
+  React.useEffect(() => {
+    if (enabled) {
+      void store.fetchAuthMe();
+    }
+  }, [enabled]);
+
+  return {
+    data: store.currentUser ?? undefined,
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchAuthMe,
+  };
 }

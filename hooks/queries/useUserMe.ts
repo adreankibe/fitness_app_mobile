@@ -1,12 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { queryKeys } from "@/hooks/queries/keys";
-import { usersService } from "@/services/users";
+import { useUsersStore } from "@/store/modules/users";
 
 export function useUserMe(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.userMe,
-    queryFn: usersService.me,
-    enabled,
-  });
+  const store = useUsersStore();
+
+  React.useEffect(() => {
+    if (enabled) {
+      void store.fetchMe();
+    }
+  }, [enabled]);
+
+  return {
+    data: store.me ?? undefined,
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchMe,
+  };
 }

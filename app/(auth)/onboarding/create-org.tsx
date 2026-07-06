@@ -3,15 +3,15 @@ import { router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Input } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { createOrganizationSchema } from "@/lib/schemas/forms";
-import { organizationsService } from "@/services/organizations";
+import { useAuthSessionStore } from "@/store/modules/auth-session";
+import { useOrganizationsStore } from "@/store/modules/organizations";
 
 type CreateOrgForm = z.infer<typeof createOrganizationSchema>;
 
@@ -24,7 +24,8 @@ function slugify(value: string) {
 }
 
 export default function CreateOrganizationScreen() {
-  const queryClient = useQueryClient();
+  const createOrganization = useOrganizationsStore((state) => state.createOrganization);
+  const fetchAuthMe = useAuthSessionStore((state) => state.fetchAuthMe);
   const toast = useToast();
   const form = useForm<CreateOrgForm>({
     defaultValues: {
@@ -36,9 +37,9 @@ export default function CreateOrganizationScreen() {
   });
 
   const mutation = useMutation({
-    mutationFn: organizationsService.create,
+    mutationFn: createOrganization,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
+      await fetchAuthMe();
       router.replace("/");
     },
     onError: (error) =>

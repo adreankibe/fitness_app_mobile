@@ -17,3 +17,26 @@ export type QueryBase = {
   pageSize?: number;
   q?: string;
 };
+
+export type MemberFilters = QueryBase & {
+  role?: string;
+  status?: string;
+};
+
+export type TeamFilters = {
+  status?: string;
+  q?: string;
+};
+
+export type InvitationFilters = {
+  status?: string;
+  email?: string;
+};
+
+export type AuditFilters = {
+  action?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+};

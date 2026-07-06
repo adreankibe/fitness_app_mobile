@@ -1,40 +1,50 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { queryKeys } from "@/hooks/queries/keys";
 import {
-  filterPrograms,
-  findProgram,
-  findSession,
-  resolveProgramCollection,
   type ProgramFilters,
 } from "@/lib/training/catalog";
-import { programsService } from "@/services/programs";
 import { useOrganizationStore } from "@/store/modules/organization";
+import { useProgramsStore } from "@/store/modules/programs";
 
 export function usePrograms(filters: ProgramFilters = {}, enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useProgramsStore();
+  const filterKey = JSON.stringify(filters);
 
-  return useQuery({
-    queryKey: queryKeys.programs(organizationId, filters),
-    queryFn: programsService.list,
-    select: (data) => filterPrograms(resolveProgramCollection(data), filters),
-    enabled: enabled && Boolean(organizationId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId) {
+      void store.fetchPrograms();
+    }
+  }, [enabled, organizationId, filterKey]);
+
+  return {
+    data: store.selectPrograms(filters),
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchPrograms,
+  };
 }
 
 export function useProgram(programId: string | undefined, enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useProgramsStore();
 
-  return useQuery({
-    queryKey: queryKeys.program(organizationId, programId),
-    queryFn: programsService.list,
-    select: (data) => findProgram(resolveProgramCollection(data), programId),
-    enabled: enabled && Boolean(organizationId && programId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId && programId) {
+      void store.fetchPrograms();
+    }
+  }, [enabled, organizationId, programId]);
+
+  return {
+    data: store.selectProgram(programId),
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchPrograms,
+  };
 }
 
 export function useProgramSession(
@@ -45,12 +55,18 @@ export function useProgramSession(
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useProgramsStore();
 
-  return useQuery({
-    queryKey: queryKeys.programSession(organizationId, programId, sessionId),
-    queryFn: programsService.list,
-    select: (data) =>
-      findSession(resolveProgramCollection(data), programId, sessionId),
-    enabled: enabled && Boolean(organizationId && programId && sessionId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId && programId && sessionId) {
+      void store.fetchPrograms();
+    }
+  }, [enabled, organizationId, programId, sessionId]);
+
+  return {
+    data: store.selectProgramSession(programId, sessionId),
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchPrograms,
+  };
 }

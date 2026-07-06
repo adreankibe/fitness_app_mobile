@@ -4,6 +4,6 @@ import type { WorkoutLog } from "@/lib/training/catalog";
 
 export type WorkoutListResponse = WorkoutLog[] | ItemsResponse<WorkoutLog>;
 
-export const workoutsService = {
+export const workoutsApi = {
   list: () => apiClient.get<WorkoutListResponse>("/v1/athletes"),
 };

@@ -35,3 +35,7 @@ export function resolveInitialRoute(
       return "/(app)/dashboard";
   }
 }
+
+export function toInvitePreviewRoute(token: string) {
+  return `/(auth)/invite/${encodeURIComponent(token)}` as const;
+}

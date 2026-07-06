@@ -2,6 +2,7 @@ import { appEnv } from "@/constants/env";
 import { supabase } from "@/lib/supabase/client";
 
 type FetchLike = typeof fetch;
+type ApiErrorHandler = (error: ApiError) => void | Promise<void>;
 
 export class ApiError extends Error {
   constructor(
@@ -17,8 +18,26 @@ export type ApiClientOptions = {
   baseUrl: string;
   getAccessToken: () => Promise<string | null>;
   getOrganizationId?: () => string | null;
+  onForbidden?: ApiErrorHandler;
+  onNetworkError?: ApiErrorHandler;
+  onUnauthorized?: ApiErrorHandler;
   fetchFn?: FetchLike;
 };
+
+export type ApiClientHandlers = Pick<
+  ApiClientOptions,
+  "onForbidden" | "onNetworkError" | "onUnauthorized"
+>;
+
+let configuredHandlers: ApiClientHandlers = {};
+
+export function configureApiClientHandlers(handlers: ApiClientHandlers) {
+  configuredHandlers = handlers;
+
+  return () => {
+    configuredHandlers = {};
+  };
+}
 
 export function buildApiUrl(baseUrl: string, path: string): string {
   const normalizedBase = baseUrl.replace(/\/+$/, "");
@@ -52,24 +71,54 @@ export function createApiClient({
   baseUrl,
   getAccessToken,
   getOrganizationId,
+  onForbidden,
+  onNetworkError,
+  onUnauthorized,
   fetchFn = fetch,
 }: ApiClientOptions) {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const token = await getAccessToken();
-      const headers = {
-        Accept: "application/json",
-        ...createAuthHeaders(token),
-        ...createOrganizationHeaders(getOrganizationId?.() ?? null),
-        ...init.headers,
-      };
+    const headers = {
+      Accept: "application/json",
+      ...createAuthHeaders(token),
+      ...createOrganizationHeaders(getOrganizationId?.() ?? null),
+      ...init.headers,
+    };
+    const handlers = {
+      ...configuredHandlers,
+      onForbidden: onForbidden ?? configuredHandlers.onForbidden,
+      onNetworkError: onNetworkError ?? configuredHandlers.onNetworkError,
+      onUnauthorized: onUnauthorized ?? configuredHandlers.onUnauthorized,
+    };
 
-    const response = await fetchFn(buildApiUrl(baseUrl, path), {
-      ...init,
-      headers,
-    });
+    let response: Response;
+
+    try {
+      response = await fetchFn(buildApiUrl(baseUrl, path), {
+        ...init,
+        headers,
+      });
+    } catch {
+      const error = new ApiError("Network error. Check your connection.", 0);
+      await handlers.onNetworkError?.(error);
+      throw error;
+    }
 
     if (!response.ok) {
-      throw new ApiError(await readErrorMessage(response), response.status);
+      const error = new ApiError(
+        await readErrorMessage(response),
+        response.status,
+      );
+
+      if (response.status === 401) {
+        await handlers.onUnauthorized?.(error);
+      }
+
+      if (response.status === 403) {
+        await handlers.onForbidden?.(error);
+      }
+
+      throw error;
     }
 
     if (response.status === 204) {

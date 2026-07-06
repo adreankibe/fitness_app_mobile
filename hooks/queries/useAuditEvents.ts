@@ -1,17 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { auditEventsService, type AuditFilters } from "@/services/audit-events";
-import { queryKeys } from "@/hooks/queries/keys";
+import { useAuditEventsStore } from "@/store/modules/audit-events";
 import { useOrganizationStore } from "@/store/modules/organization";
+import type { AuditFilters } from "@/types";
 
 export function useAuditEvents(filters: AuditFilters = {}, enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useAuditEventsStore();
+  const filterKey = JSON.stringify(filters);
 
-  return useQuery({
-    queryKey: queryKeys.auditEvents(organizationId, filters),
-    queryFn: () => auditEventsService.list(filters),
-    enabled: enabled && Boolean(organizationId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId) {
+      void store.fetchAuditEvents(filters);
+    }
+  }, [enabled, organizationId, filterKey]);
+
+  return {
+    data: store.auditEvents ?? undefined,
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: () => store.fetchAuditEvents(filters),
+  };
 }

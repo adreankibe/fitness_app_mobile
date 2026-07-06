@@ -3,16 +3,15 @@ import { router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { PermissionState } from "@/components/domain";
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Input, PageHeader, Select, Textarea } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { inviteMemberSchema } from "@/lib/schemas/forms";
-import { invitationsService } from "@/services/invitations";
+import { useInvitationsStore } from "@/store/modules/invitations";
 import type { OrganizationRole } from "@/types/api";
 
 type InviteForm = z.infer<typeof inviteMemberSchema>;
@@ -25,7 +24,7 @@ const roleOptions = [
 
 export default function InviteMemberScreen() {
   const toast = useToast();
-  const queryClient = useQueryClient();
+  const createInvitation = useInvitationsStore((state) => state.createInvitation);
   const form = useForm<InviteForm>({
     defaultValues: {
       email: "",
@@ -40,7 +39,7 @@ export default function InviteMemberScreen() {
 
   const mutation = useMutation({
     mutationFn: (values: InviteForm) =>
-      invitationsService.create({
+      createInvitation({
         email: values.email || undefined,
         expiresInDays: values.expiresInDays,
         maxRedemptions: values.maxRedemptions,
@@ -49,7 +48,6 @@ export default function InviteMemberScreen() {
         teamId: values.teamId || undefined,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
       toast.showToast({ title: "Invitation sent", variant: "success" });
       router.back();
     },

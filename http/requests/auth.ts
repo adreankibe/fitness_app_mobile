@@ -1,15 +1,17 @@
 import { apiClient } from "@/http/client";
 import type { CompleteProfileRequest, CurrentUser } from "@/types/api";
 
-export const authService = {
-  me: () => apiClient.get<CurrentUser>("/v1/auth/me"),
+const BASE = "/v1/auth";
+
+export const authApi = {
+  me: () => apiClient.get<CurrentUser>(`${BASE}/me`),
   completeProfile: (input: CompleteProfileRequest) =>
-    apiClient.patch<CurrentUser>("/v1/auth/profile", input),
+    apiClient.patch<CurrentUser>(`${BASE}/profile`, input),
   refreshRegistration: () =>
-    apiClient.post<CurrentUser>("/v1/auth/registration/refresh"),
+    apiClient.post<CurrentUser>(`${BASE}/registration/refresh`),
   setDefaultOrganization: (organizationId: string) =>
     apiClient.put<{ defaultOrganizationId: string }>(
-      "/v1/auth/default-organization",
+      `${BASE}/default-organization`,
       { organizationId },
     ),
 };
