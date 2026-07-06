@@ -63,7 +63,9 @@ type ButtonProps = Omit<PressableProps, "children"> &
   VariantProps<typeof buttonVariants> & {
     children?: React.ReactNode;
     label?: string;
+    leftIcon?: React.ReactNode;
     loading?: boolean;
+    rightIcon?: React.ReactNode;
     className?: string;
     textClassName?: string;
   };
@@ -78,7 +80,9 @@ export function Button({
   className,
   disabled,
   label,
+  leftIcon,
   loading = false,
+  rightIcon,
   size,
   textClassName,
   variant,
@@ -96,6 +100,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={loadingColor(variant)} size="small" />
       ) : null}
+      {!loading ? leftIcon : null}
       {typeof content === "string" ? (
         <Text className={cn(labelVariants({ variant, size }), textClassName)}>
           {content}
@@ -103,6 +108,7 @@ export function Button({
       ) : (
         content
       )}
+      {!loading ? rightIcon : null}
     </Pressable>
   );
 }

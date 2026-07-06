@@ -16,6 +16,7 @@ export class ApiError extends Error {
 export type ApiClientOptions = {
   baseUrl: string;
   getAccessToken: () => Promise<string | null>;
+  getOrganizationId?: () => string | null;
   fetchFn?: FetchLike;
 };
 
@@ -28,6 +29,12 @@ export function buildApiUrl(baseUrl: string, path: string): string {
 
 export function createAuthHeaders(token: string | null): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export function createOrganizationHeaders(
+  organizationId: string | null,
+): Record<string, string> {
+  return organizationId ? { "x-organization-id": organizationId } : {};
 }
 
 async function readErrorMessage(response: Response): Promise<string> {
@@ -44,15 +51,17 @@ async function readErrorMessage(response: Response): Promise<string> {
 export function createApiClient({
   baseUrl,
   getAccessToken,
+  getOrganizationId,
   fetchFn = fetch,
 }: ApiClientOptions) {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const token = await getAccessToken();
-    const headers = {
-      Accept: "application/json",
-      ...createAuthHeaders(token),
-      ...init.headers,
-    };
+      const headers = {
+        Accept: "application/json",
+        ...createAuthHeaders(token),
+        ...createOrganizationHeaders(getOrganizationId?.() ?? null),
+        ...init.headers,
+      };
 
     const response = await fetchFn(buildApiUrl(baseUrl, path), {
       ...init,
@@ -82,6 +91,16 @@ export function createApiClient({
         },
         ...init,
       }),
+    put: <T>(path: string, body?: unknown, init?: RequestInit) =>
+      request<T>(path, {
+        method: "PUT",
+        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+          ...init?.headers,
+        },
+        ...init,
+      }),
     patch: <T>(path: string, body?: unknown, init?: RequestInit) =>
       request<T>(path, {
         method: "PATCH",
@@ -99,6 +118,10 @@ export function createApiClient({
 
 export const apiClient = createApiClient({
   baseUrl: appEnv.apiUrl,
+  getOrganizationId: () => {
+    const { useOrganizationStore } = require("@/store/modules/organization");
+    return useOrganizationStore.getState().activeOrganizationId;
+  },
   getAccessToken: async () => {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;

@@ -3,6 +3,7 @@ import {
   buildApiUrl,
   createApiClient,
   createAuthHeaders,
+  createOrganizationHeaders,
 } from "@/http/client";
 
 describe("buildApiUrl", () => {
@@ -19,6 +20,15 @@ describe("createAuthHeaders", () => {
       Authorization: "Bearer token-123",
     });
     expect(createAuthHeaders(null)).toEqual({});
+  });
+});
+
+describe("createOrganizationHeaders", () => {
+  it("adds organization context only when present", () => {
+    expect(createOrganizationHeaders("org-123")).toEqual({
+      "x-organization-id": "org-123",
+    });
+    expect(createOrganizationHeaders(null)).toEqual({});
   });
 });
 
@@ -43,6 +53,32 @@ describe("createApiClient", () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer access-token",
+        }),
+      }),
+    );
+  });
+
+  it("attaches active organization id to backend requests", async () => {
+    const fetchFn = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    });
+
+    const client = createApiClient({
+      baseUrl: "http://localhost:3000",
+      fetchFn,
+      getAccessToken: async () => null,
+      getOrganizationId: () => "org-456",
+    });
+
+    await client.get("/v1/members");
+
+    expect(fetchFn).toHaveBeenCalledWith(
+      "http://localhost:3000/v1/members",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-organization-id": "org-456",
         }),
       }),
     );

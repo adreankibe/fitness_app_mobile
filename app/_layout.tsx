@@ -11,7 +11,9 @@ export default function RootLayout() {
     <AppProviders>
       <Theme>
         <Stack>
-          <Stack.Screen name="index" options={{ title: "Fitness Coaching" }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" options={{ title: "Not Found" }} />
         </Stack>
       </Theme>
