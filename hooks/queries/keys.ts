@@ -18,4 +18,17 @@ export const queryKeys = {
   auditEvents: (organizationId: string | null, filters: unknown) =>
     ["audit-events", organizationId, filters] as const,
   userMe: ["users", "me"] as const,
+  programs: (organizationId: string | null, filters: unknown) =>
+    ["programs", organizationId, filters] as const,
+  program: (organizationId: string | null, programId: string | undefined) =>
+    ["programs", organizationId, programId] as const,
+  programSession: (
+    organizationId: string | null,
+    programId: string | undefined,
+    sessionId: string | undefined,
+  ) => ["programs", organizationId, programId, "sessions", sessionId] as const,
+  workouts: (organizationId: string | null, filters: unknown) =>
+    ["workouts", organizationId, filters] as const,
+  workout: (organizationId: string | null, workoutId: string | undefined) =>
+    ["workouts", organizationId, workoutId] as const,
 };
