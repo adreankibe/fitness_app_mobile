@@ -3,21 +3,22 @@ import { router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Input, PageHeader } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { useUserMe } from "@/hooks/queries/useUserMe";
 import { profileEditSchema } from "@/lib/schemas/forms";
-import { usersService } from "@/services/users";
+import { useAuthSessionStore } from "@/store/modules/auth-session";
+import { useUsersStore } from "@/store/modules/users";
 
 type ProfileEditForm = z.infer<typeof profileEditSchema>;
 
 export default function EditProfileScreen() {
-  const queryClient = useQueryClient();
+  const updateMe = useUsersStore((state) => state.updateMe);
+  const fetchAuthMe = useAuthSessionStore((state) => state.fetchAuthMe);
   const toast = useToast();
   const user = useUserMe();
   const form = useForm<ProfileEditForm>({
@@ -36,13 +37,12 @@ export default function EditProfileScreen() {
 
   const mutation = useMutation({
     mutationFn: (values: ProfileEditForm) =>
-      usersService.updateMe({
+      updateMe({
         avatarUrl: values.avatarUrl || null,
         fullName: values.fullName,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.userMe });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.authMe });
+      await fetchAuthMe();
       toast.showToast({ title: "Profile saved", variant: "success" });
       router.back();
     },

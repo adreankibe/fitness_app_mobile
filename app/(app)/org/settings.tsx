@@ -2,17 +2,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { PermissionState, RepScriptLoader } from "@/components/domain";
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Input, PageHeader, Select, Switch } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { useCurrentOrganization } from "@/hooks/queries/useOrganizations";
 import { organizationSettingsSchema } from "@/lib/schemas/forms";
-import { organizationsService } from "@/services/organizations";
+import { useOrganizationsStore } from "@/store/modules/organizations";
 import type { OrganizationRole } from "@/types/api";
 
 type SettingsForm = z.infer<typeof organizationSettingsSchema>;
@@ -25,7 +24,10 @@ const roleOptions = [
 
 export default function OrganizationSettingsScreen() {
   const organization = useCurrentOrganization();
-  const queryClient = useQueryClient();
+  const updateOrganization = useOrganizationsStore((state) => state.updateOrganization);
+  const updateOrganizationSettings = useOrganizationsStore(
+    (state) => state.updateOrganizationSettings,
+  );
   const toast = useToast();
   const form = useForm<SettingsForm>({
     defaultValues: {
@@ -57,11 +59,11 @@ export default function OrganizationSettingsScreen() {
 
   const mutation = useMutation({
     mutationFn: async (values: SettingsForm) => {
-      await organizationsService.update({
+      await updateOrganization({
         name: values.name,
         slug: values.slug,
       });
-      return organizationsService.updateSettings({
+      return updateOrganizationSettings({
         allowAthleteSelfJoin: values.allowAthleteSelfJoin,
         defaultInviteRole: values.defaultInviteRole as OrganizationRole,
         requireCoachApprovalForBuyers: values.requireCoachApprovalForBuyers,
@@ -69,9 +71,6 @@ export default function OrganizationSettingsScreen() {
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.currentOrganization(null).slice(0, 2),
-      });
       toast.showToast({ title: "Settings saved", variant: "success" });
     },
   });

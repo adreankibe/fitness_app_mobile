@@ -70,6 +70,12 @@ function WeekBlock({
               </View>
             </Pressable>
           ))}
+          <Button
+            label="View week"
+            onPress={() => router.push(`/(app)/programs/${programId}/week/${week.id}`)}
+            size="sm"
+            variant="secondary"
+          />
         </CardContent>
       ) : null}
     </Card>

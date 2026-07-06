@@ -1,12 +1,14 @@
 import { create } from "zustand";
 
-import type { CurrentUserMembership } from "@/types/api";
+import type { CurrentUserMembership, Organization } from "@/types/api";
 
 export type OrganizationState = {
   activeOrganizationId: string | null;
+  organizations: Organization[];
   memberships: CurrentUserMembership[];
   permissions: string[];
   setActiveOrganization: (organizationId: string | null) => void;
+  setOrganizations: (organizations: Organization[]) => void;
   hydrateFromMemberships: (
     memberships: CurrentUserMembership[],
     preferredOrganizationId?: string | null,
@@ -32,6 +34,7 @@ function resolveMembership(
 
 export const useOrganizationStore = create<OrganizationState>()((set) => ({
   activeOrganizationId: null,
+  organizations: [],
   memberships: [],
   permissions: [],
   setActiveOrganization: (organizationId) =>
@@ -46,6 +49,7 @@ export const useOrganizationStore = create<OrganizationState>()((set) => ({
         permissions: membership?.permissions ?? [],
       };
     }),
+  setOrganizations: (organizations) => set({ organizations }),
   hydrateFromMemberships: (memberships, preferredOrganizationId) => {
     const membership = resolveMembership(memberships, preferredOrganizationId);
 
@@ -58,6 +62,7 @@ export const useOrganizationStore = create<OrganizationState>()((set) => ({
   reset: () =>
     set({
       activeOrganizationId: null,
+      organizations: [],
       memberships: [],
       permissions: [],
     }),

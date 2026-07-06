@@ -3,21 +3,20 @@ import { router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { PermissionState } from "@/components/domain";
 import { Screen } from "@/components/layout/screen";
 import { Button, Card, CardContent, Input, PageHeader, Textarea } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { queryKeys } from "@/hooks/queries/keys";
 import { teamSchema } from "@/lib/schemas/forms";
-import { teamsService } from "@/services/teams";
+import { useTeamsStore } from "@/store/modules/teams";
 
 type TeamForm = z.infer<typeof teamSchema>;
 
 export default function CreateTeamScreen() {
-  const queryClient = useQueryClient();
+  const createTeam = useTeamsStore((state) => state.createTeam);
   const toast = useToast();
   const form = useForm<TeamForm>({
     defaultValues: { description: "", name: "" },
@@ -25,9 +24,8 @@ export default function CreateTeamScreen() {
   });
 
   const mutation = useMutation({
-    mutationFn: teamsService.create,
+    mutationFn: createTeam,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["teams"] });
       toast.showToast({ title: "Team created", variant: "success" });
       router.back();
     },

@@ -91,7 +91,15 @@ export default function AppLayout() {
       <Tabs.Screen name="members/teams/index" options={{ href: null }} />
       <Tabs.Screen name="members/teams/[id]" options={{ href: null }} />
       <Tabs.Screen name="members/teams/create" options={{ href: null }} />
+      <Tabs.Screen name="athletes/index" options={{ href: null }} />
+      <Tabs.Screen name="athletes/[id]" options={{ href: null }} />
+      <Tabs.Screen
+        name="athletes/[id]/workout/[logId]"
+        options={{ href: null }}
+      />
       <Tabs.Screen name="programs/[id]" options={{ href: null }} />
+      <Tabs.Screen name="programs/[id]/week/[weekId]" options={{ href: null }} />
+      <Tabs.Screen name="programs/create" options={{ href: null }} />
       <Tabs.Screen
         name="programs/[id]/session/[sessionId]"
         options={{ href: null }}
@@ -100,6 +108,7 @@ export default function AppLayout() {
       <Tabs.Screen name="workouts/history" options={{ href: null }} />
       <Tabs.Screen name="org/settings" options={{ href: null }} />
       <Tabs.Screen name="org/audit-log" options={{ href: null }} />
+      <Tabs.Screen name="org/invite/manage" options={{ href: null }} />
       <Tabs.Screen name="profile/edit" options={{ href: null }} />
     </Tabs>
   );

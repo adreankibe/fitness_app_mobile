@@ -1,25 +1,41 @@
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 
-import { queryKeys } from "@/hooks/queries/keys";
-import { organizationsService } from "@/services/organizations";
 import { useOrganizationStore } from "@/store/modules/organization";
+import { useOrganizationsStore } from "@/store/modules/organizations";
 
 export function useOrganizations(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.organizations,
-    queryFn: organizationsService.list,
-    enabled,
-  });
+  const store = useOrganizationsStore();
+
+  React.useEffect(() => {
+    if (enabled) {
+      void store.fetchOrganizations();
+    }
+  }, [enabled]);
+
+  return {
+    data: { items: store.organizations },
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchOrganizations,
+  };
 }
 
 export function useCurrentOrganization(enabled = true) {
   const organizationId = useOrganizationStore(
     (state) => state.activeOrganizationId,
   );
+  const store = useOrganizationsStore();
 
-  return useQuery({
-    queryKey: queryKeys.currentOrganization(organizationId),
-    queryFn: organizationsService.current,
-    enabled: enabled && Boolean(organizationId),
-  });
+  React.useEffect(() => {
+    if (enabled && organizationId) {
+      void store.fetchCurrentOrganization();
+    }
+  }, [enabled, organizationId]);
+
+  return {
+    data: store.currentOrganization ?? undefined,
+    isLoading: store.isLoading,
+    error: store.error,
+    refetch: store.fetchCurrentOrganization,
+  };
 }
