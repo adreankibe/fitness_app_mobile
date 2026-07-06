@@ -1,12 +1,27 @@
 import { Redirect, Tabs } from "expo-router";
-import { LayoutDashboard, UserCircle, Users, UsersRound } from "lucide-react-native";
+import {
+  Dumbbell,
+  LayoutDashboard,
+  Timer,
+  UserCircle,
+  Users,
+} from "lucide-react-native";
 import React from "react";
 
 import { RepScriptLoader } from "@/components/domain/repscript-loader";
 import { useAuth } from "@/components/providers/auth-provider";
+import { getActiveMembership } from "@/lib/permissions/access";
+import { useOrganizationStore } from "@/store/modules/organization";
 
 export default function AppLayout() {
   const { isLoading, session } = useAuth();
+  const activeOrganizationId = useOrganizationStore(
+    (state) => state.activeOrganizationId,
+  );
+  const memberships = useOrganizationStore((state) => state.memberships);
+  const activeMembership = getActiveMembership(memberships, activeOrganizationId);
+  const athleteOnly =
+    activeMembership?.role === "ATHLETE" || activeMembership?.role === "TRIAL_USER";
 
   if (isLoading) {
     return <RepScriptLoader label="Checking session" />;
@@ -42,17 +57,24 @@ export default function AppLayout() {
       <Tabs.Screen
         name="members/index"
         options={{
+          href: athleteOnly ? null : undefined,
           title: "Members",
           tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
         }}
       />
       <Tabs.Screen
-        name="members/teams/index"
+        name="programs/index"
         options={{
-          title: "Teams",
-          tabBarIcon: ({ color, size }) => (
-            <UsersRound color={color} size={size} />
-          ),
+          title: "Programs",
+          tabBarIcon: ({ color, size }) => <Dumbbell color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="workouts/index"
+        options={{
+          href: athleteOnly ? undefined : null,
+          title: "Workouts",
+          tabBarIcon: ({ color, size }) => <Timer color={color} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -66,8 +88,16 @@ export default function AppLayout() {
       />
       <Tabs.Screen name="members/[id]" options={{ href: null }} />
       <Tabs.Screen name="members/invite" options={{ href: null }} />
+      <Tabs.Screen name="members/teams/index" options={{ href: null }} />
       <Tabs.Screen name="members/teams/[id]" options={{ href: null }} />
       <Tabs.Screen name="members/teams/create" options={{ href: null }} />
+      <Tabs.Screen name="programs/[id]" options={{ href: null }} />
+      <Tabs.Screen
+        name="programs/[id]/session/[sessionId]"
+        options={{ href: null }}
+      />
+      <Tabs.Screen name="workouts/[id]" options={{ href: null }} />
+      <Tabs.Screen name="workouts/history" options={{ href: null }} />
       <Tabs.Screen name="org/settings" options={{ href: null }} />
       <Tabs.Screen name="org/audit-log" options={{ href: null }} />
       <Tabs.Screen name="profile/edit" options={{ href: null }} />
