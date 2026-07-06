@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase/client";
 type AuthContextValue = {
   isLoading: boolean;
   session: Session | null;
+  signInWithEmail: (email: string) => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
@@ -38,7 +40,26 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   const value = React.useMemo(
-    () => ({ isLoading, session }),
+    () => ({
+      isLoading,
+      session,
+      signInWithEmail: async (email: string) => {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+        });
+
+        if (error) {
+          throw error;
+        }
+      },
+      signOut: async () => {
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+          throw error;
+        }
+      },
+    }),
     [isLoading, session],
   );
 

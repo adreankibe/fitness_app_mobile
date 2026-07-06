@@ -1,17 +1,7 @@
-jest.mock("@/hooks/use-health-check", () => ({
-  useHealthCheck: () => ({
-    isError: false,
-    isLoading: false,
-  }),
-}));
+import { resolveInitialRoute } from "@/lib/navigation/route-decisions";
 
-import HomeScreen from "@/app/index";
-
-describe("HomeScreen", () => {
-  it("renders the mobile environment status screen", () => {
-    const tree = JSON.stringify(HomeScreen());
-
-    expect(tree).toContain("Fitness Coaching");
-    expect(tree).toContain("Expo mobile environment ready");
+describe("app index routing smoke", () => {
+  it("routes unauthenticated launches into auth", () => {
+    expect(resolveInitialRoute(false, false, null)).toBe("/(auth)/login");
   });
 });
